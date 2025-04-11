@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef } from 'react'
-import { useDrag, DragSourceMonitor } from 'react-dnd/dist/index.js'
+import { useDrag } from 'react-dnd/dist/index.js'
 import { Task } from '@/types/task'
 
 interface TaskCardProps {
@@ -13,7 +13,7 @@ export default function TaskCard({ task }: TaskCardProps) {
   const [{ isDragging }, drag] = useDrag(() => ({
     type: 'task',
     item: { id: task.id },
-    collect: (monitor: DragSourceMonitor) => ({
+    collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
   }))
@@ -28,7 +28,9 @@ export default function TaskCard({ task }: TaskCardProps) {
       }`}
     >
       <h3 className="text-lg font-semibold">{task.title}</h3>
-      <p className="text-gray-600">{task.description}</p>
+      {task.description && (
+        <p className="text-gray-600 mt-2">{task.description}</p>
+      )}
     </div>
   )
 } 
