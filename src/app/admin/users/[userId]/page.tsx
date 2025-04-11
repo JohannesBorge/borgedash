@@ -100,7 +100,7 @@ export default function UserBoard() {
     <div className="container mx-auto py-8">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold">
-          {user?.email}'s Board
+          {user?.email}&apos;s Board
         </h1>
         <button
           onClick={() => router.back()}
