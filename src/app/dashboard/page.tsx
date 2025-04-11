@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import TaskBoard from '@/components/TaskBoard'
 import { User } from '@supabase/supabase-js'
@@ -8,6 +9,7 @@ import { isAdminEmail } from '@/lib/whitelist'
 import Link from 'next/link'
 
 export default function DashboardPage() {
+  const router = useRouter()
   const supabase = createClientComponentClient()
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
@@ -39,6 +41,16 @@ export default function DashboardPage() {
     getUser()
   }, [supabase])
 
+  const handleSignOut = async () => {
+    try {
+      const { error } = await supabase.auth.signOut()
+      if (error) throw error
+      router.push('/login')
+    } catch (error) {
+      console.error('Error signing out:', error)
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -60,7 +72,15 @@ export default function DashboardPage() {
         <div className="px-4 py-6 sm:px-0">
           {isAdmin ? (
             <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">Admin Dashboard</h2>
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-semibold text-gray-800">Admin Dashboard</h2>
+                <button
+                  onClick={handleSignOut}
+                  className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                >
+                  Sign Out
+                </button>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div className="bg-indigo-50 p-6 rounded-lg">
                   <h3 className="text-lg font-medium text-indigo-800 mb-2">Admin Tools</h3>
@@ -96,7 +116,15 @@ export default function DashboardPage() {
             </div>
           ) : (
             <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">Your Tasks</h2>
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-semibold text-gray-800">Your Tasks</h2>
+                <button
+                  onClick={handleSignOut}
+                  className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                >
+                  Sign Out
+                </button>
+              </div>
               <TaskBoard />
             </div>
           )}

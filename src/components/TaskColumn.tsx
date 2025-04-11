@@ -8,9 +8,10 @@ interface TaskColumnProps {
   title: string
   tasks: Task[]
   status: 'must_get_done' | 'doing_now' | 'finished'
+  onDeleteTask: (taskId: string) => void
 }
 
-export default function TaskColumn({ title, tasks, status }: TaskColumnProps) {
+export default function TaskColumn({ title, tasks, status, onDeleteTask }: TaskColumnProps) {
   return (
     <div className="flex-1 p-4 bg-gray-50 rounded-lg">
       <h2 className="text-lg font-semibold mb-4">{title}</h2>
@@ -22,7 +23,12 @@ export default function TaskColumn({ title, tasks, status }: TaskColumnProps) {
             className="min-h-[200px]"
           >
             {tasks.map((task, index) => (
-              <TaskCard key={task.id} task={task} index={index} />
+              <TaskCard 
+                key={task.id} 
+                task={task} 
+                index={index} 
+                onDelete={onDeleteTask}
+              />
             ))}
             {provided.placeholder}
           </div>
