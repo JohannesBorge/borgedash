@@ -1,5 +1,4 @@
-import { BoardWithTasks, Task, UserWithBoards } from '@/types';
-import { createClient } from './supabase/client';
+import { Task, UserWithBoards } from '@/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
 
