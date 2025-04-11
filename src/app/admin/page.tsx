@@ -2,15 +2,15 @@
 
 import { useEffect, useState } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { User } from '@supabase/supabase-js';
+import { User } from '@supabase/auth-js';
 import { useRouter } from 'next/navigation';
 
 interface AdminUser {
   id: string;
   email: string;
-  created_at: string;
-  last_sign_in: string;
+  last_sign_in_at: string | null;
   is_admin: boolean;
+  created_at: string;
 }
 
 export default function AdminPage() {
@@ -19,6 +19,7 @@ export default function AdminPage() {
   const [user, setUser] = useState<User | null>(null);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const getUser = async () => {
@@ -74,17 +75,10 @@ export default function AdminPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
+          </div>
           <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold text-gray-800">Admin Dashboard</h2>
-              <button
-                onClick={handleSignOut}
-                className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-              >
-                Sign Out
-              </button>
-            </div>
-
             <div className="mb-8">
               <h3 className="text-lg font-medium text-gray-900 mb-4">User Management</h3>
               <div className="overflow-x-auto">
@@ -105,7 +99,7 @@ export default function AdminPage() {
                           {new Date(user.created_at).toLocaleDateString()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {user.last_sign_in ? new Date(user.last_sign_in).toLocaleDateString() : 'Never'}
+                          {user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleDateString() : 'Never'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
