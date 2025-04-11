@@ -5,7 +5,11 @@ import { Task, TaskStatus } from '@/types/task'
 import dynamic from 'next/dynamic'
 import { createClient } from '@/lib/supabase/client'
 
-const TaskColumn = dynamic(() => import('./TaskColumn'), {
+const TaskColumn = dynamic<{
+  title: string
+  tasks: Task[]
+  onDrop: (taskId: string) => void
+}>(() => import('./TaskColumn'), {
   ssr: false,
   loading: () => <div>Loading column...</div>
 })
