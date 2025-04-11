@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { User } from '@supabase/supabase-js';
 import UserList from '@/components/admin/UserList';
 import { useRouter } from 'next/navigation';
 
