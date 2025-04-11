@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { Board } from '@/types';
 
 interface BoardPreviewProps {
@@ -8,33 +7,12 @@ interface BoardPreviewProps {
 }
 
 export default function BoardPreview({ board }: BoardPreviewProps) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
   const todoTasks = board.tasks.filter(task => task.status === 'todo');
   const inProgressTasks = board.tasks.filter(task => task.status === 'in-progress');
   const doneTasks = board.tasks.filter(task => task.status === 'done');
 
-  if (isLoading) {
-    return (
-      <div className="bg-gray-50 rounded-lg p-4 animate-pulse">
-        <div className="h-4 bg-gray-200 rounded w-3/4 mb-3"></div>
-        <div className="space-y-2">
-          <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-          <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-          <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="bg-gray-50 rounded-lg p-4">
-      {error && (
-        <div className="mb-3 p-2 bg-red-100 border border-red-400 text-red-700 rounded text-xs">
-          {error}
-        </div>
-      )}
       <h4 className="font-medium text-gray-800 mb-3">{board.title}</h4>
       <div className="space-y-2">
         <div className="flex items-center justify-between text-sm">

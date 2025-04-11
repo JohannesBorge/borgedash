@@ -3,49 +3,46 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { Board } from '@/types';
+import { Board, Task } from '@/types';
 import { getUserBoards, getBoardTasks } from '@/lib/api';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import BoardPreview from '@/components/admin/BoardPreview';
 
-const ADMIN_EMAILS = ['johborge@gmail.com'];
+interface UserBoardPageProps {
+  params: {
+    userId: string;
+  };
+}
 
-export default async function UserBoardView({
-  params,
-}: {
-  params: { userId: string };
-}) {
+export default function UserBoardPage({ params }: UserBoardPageProps) {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [boards, setBoards] = useState<Board[]>([]);
   const [loadingBoards, setLoadingBoards] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!loading && (!user || !ADMIN_EMAILS.includes(user.email))) {
+    if (!loading && !user) {
       router.push('/login');
+    } else if (!loading && user && user.role !== 'admin') {
+      router.push('/');
     }
   }, [user, loading, router]);
 
   useEffect(() => {
     const fetchBoards = async () => {
       try {
-        const boardsData = await getUserBoards(params.userId);
-        const boardsWithTasks = await Promise.all(
-          boardsData.map(async (board) => {
-            const tasks = await getBoardTasks(board.id);
-            return { ...board, tasks };
-          })
-        );
-        setBoards(boardsWithTasks);
+        const fetchedBoards = await getUserBoards(params.userId);
+        setBoards(fetchedBoards);
+        setError(null);
       } catch (error) {
         console.error('Error fetching boards:', error);
+        setError('Failed to load boards. Please try again later.');
       } finally {
         setLoadingBoards(false);
       }
     };
 
-    if (user && ADMIN_EMAILS.includes(user.email)) {
+    if (user?.role === 'admin') {
       fetchBoards();
     }
   }, [user, params.userId]);
@@ -53,49 +50,32 @@ export default async function UserBoardView({
   if (loading || loadingBoards) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     );
   }
 
-  if (!user || !ADMIN_EMAILS.includes(user.email)) {
+  if (!user || user.role !== 'admin') {
     return null;
   }
 
   return (
-    <div className="container mx-auto py-8">
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold">User Boards</h1>
-        <Button variant="outline" onClick={() => router.push('/admin')}>
-          Back to Dashboard
-        </Button>
-      </div>
-      <ScrollArea className="h-[calc(100vh-200px)]">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {boards.map((board) => (
-            <Card key={board.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle>{board.name}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {board.tasks?.map((task) => (
-                    <div
-                      key={task.id}
-                      className="p-4 bg-muted rounded-lg"
-                    >
-                      <h3 className="font-semibold mb-2">{task.title}</h3>
-                      <div className="text-sm text-muted-foreground">
-                        Status: {task.status}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+    <div className="min-h-screen bg-gray-100">
+      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div className="px-4 py-6 sm:px-0">
+          <h1 className="text-3xl font-bold text-gray-900 mb-8">User Boards</h1>
+          {error && (
+            <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+              {error}
+            </div>
+          )}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {boards.map((board) => (
+              <BoardPreview key={board.id} board={board} />
+            ))}
+          </div>
         </div>
-      </ScrollArea>
+      </div>
     </div>
   );
 } 
