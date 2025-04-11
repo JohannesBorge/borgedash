@@ -15,13 +15,13 @@ export default function HomePage() {
         const { data: { session } } = await supabase.auth.getSession()
         
         if (session?.user) {
-          router.push('/dashboard')
+          router.replace('/dashboard')
         } else {
-          router.push('/login')
+          router.replace('/login')
         }
       } catch (error) {
         console.error('Error checking auth:', error)
-        router.push('/login')
+        router.replace('/login')
       } finally {
         setLoading(false)
       }
