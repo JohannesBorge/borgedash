@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { isEmailWhitelisted } from '@/lib/whitelist'
+import { useRouter } from 'next/navigation'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -10,6 +11,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [isRegistering, setIsRegistering] = useState(false)
+  const router = useRouter()
 
   const supabase = createClient()
 
@@ -19,28 +21,37 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
+      console.log('Attempting to:', isRegistering ? 'register' : 'login')
+      console.log('Email:', email)
+      
       if (isRegistering) {
         // Check if email is whitelisted
         if (!isEmailWhitelisted(email)) {
           throw new Error('This email is not authorized to register. Please contact support.')
         }
 
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
         })
 
+        console.log('Sign up response:', { data, error })
         if (error) throw error
         setError('Registration successful! Please check your email to confirm your account.')
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         })
 
+        console.log('Sign in response:', { data, error })
         if (error) throw error
+        
+        // Redirect to dashboard after successful login
+        router.push('/')
       }
     } catch (error) {
+      console.error('Auth error:', error)
       setError(error instanceof Error ? error.message : 'An error occurred')
     } finally {
       setLoading(false)
