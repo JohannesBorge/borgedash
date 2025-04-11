@@ -15,8 +15,6 @@ export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
-  const [tasks, setTasks] = useState<Task[]>([])
-  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const getUser = async () => {

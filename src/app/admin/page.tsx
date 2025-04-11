@@ -19,7 +19,6 @@ export default function AdminPage() {
   const [user, setUser] = useState<User | null>(null);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const getUser = async () => {
