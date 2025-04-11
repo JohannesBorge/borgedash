@@ -11,7 +11,14 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 
 const ADMIN_EMAILS = ['johborge@gmail.com'];
 
-export default function UserBoardView({ params }: { params: { userId: string } }) {
+interface PageProps {
+  params: {
+    userId: string;
+  };
+  searchParams?: { [key: string]: string | string[] | undefined };
+}
+
+export default function UserBoardView({ params }: PageProps) {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [boards, setBoards] = useState<Board[]>([]);
