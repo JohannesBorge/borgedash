@@ -7,16 +7,10 @@ import TaskBoard from '@/components/TaskBoard'
 import { User } from '@supabase/supabase-js'
 import { isAdminEmail } from '@/lib/whitelist'
 
-type AdminAccess = {
-  granted: boolean
-  granted_at: string | null
-}
-
 export default function DashboardPage() {
   const router = useRouter()
   const supabase = createClientComponentClient()
   const [user, setUser] = useState<User | null>(null)
-  const [adminAccess, setAdminAccess] = useState<AdminAccess | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -28,26 +22,13 @@ export default function DashboardPage() {
         // Check if user is an admin
         if (isAdminEmail(user.email!)) {
           // Automatically grant admin access for admin emails
-          const { data } = await supabase
+          await supabase
             .from('admin_access')
             .upsert({ 
               id: user.id,
               granted: true,
               granted_at: new Date().toISOString()
             })
-            .select('granted, granted_at')
-            .single()
-
-          setAdminAccess(data)
-        } else {
-          // Check existing admin access for non-admin users
-          const { data } = await supabase
-            .from('admin_access')
-            .select('granted, granted_at')
-            .eq('id', user.id)
-            .single()
-
-          setAdminAccess(data)
         }
       }
       setLoading(false)
