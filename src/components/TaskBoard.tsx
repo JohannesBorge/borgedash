@@ -1,9 +1,14 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, Suspense } from 'react'
 import { Task, TaskStatus } from '@/types/task'
-import TaskColumn from './TaskColumn'
+import dynamic from 'next/dynamic'
 import { supabase } from '@/lib/supabase'
+
+const TaskColumn = dynamic(() => import('./TaskColumn'), {
+  ssr: false,
+  loading: () => <div>Loading column...</div>
+})
 
 interface TaskBoardProps {
   userId: string
@@ -66,12 +71,13 @@ export default function TaskBoard({ userId }: TaskBoardProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4">
       {columns.map((column) => (
-        <TaskColumn
-          key={column.id}
-          title={column.title}
-          tasks={tasks.filter((t) => t.status === column.id)}
-          onDrop={(taskId) => handleDrop(taskId, column.id)}
-        />
+        <Suspense key={column.id} fallback={<div>Loading column...</div>}>
+          <TaskColumn
+            title={column.title}
+            tasks={tasks.filter((t) => t.status === column.id)}
+            onDrop={(taskId) => handleDrop(taskId, column.id)}
+          />
+        </Suspense>
       ))}
     </div>
   )

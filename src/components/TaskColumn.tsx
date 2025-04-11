@@ -1,9 +1,14 @@
 'use client'
 
-import { useRef } from 'react'
+import { useRef, Suspense } from 'react'
 import { useDrop } from 'react-dnd/dist/index.js'
 import { Task } from '@/types/task'
-import TaskCard from './TaskCard'
+import dynamic from 'next/dynamic'
+
+const TaskCard = dynamic(() => import('./TaskCard'), {
+  ssr: false,
+  loading: () => <div>Loading card...</div>
+})
 
 interface TaskColumnProps {
   title: string
@@ -33,7 +38,9 @@ export default function TaskColumn({ title, tasks, onDrop }: TaskColumnProps) {
       <h2 className="text-lg font-semibold mb-4">{title}</h2>
       <div className="space-y-4">
         {tasks.map((task) => (
-          <TaskCard key={task.id} task={task} />
+          <Suspense key={task.id} fallback={<div>Loading card...</div>}>
+            <TaskCard task={task} />
+          </Suspense>
         ))}
       </div>
     </div>
