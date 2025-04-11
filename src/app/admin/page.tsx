@@ -2,93 +2,151 @@
 
 import { useEffect, useState } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import UserList from '@/components/admin/UserList';
+import { User } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 
-interface Profile {
+interface AdminUser {
   id: string;
   email: string;
+  created_at: string;
+  last_sign_in: string;
   is_admin: boolean;
 }
 
-export default function AdminDashboard() {
-  const [users, setUsers] = useState<Profile[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export default function AdminPage() {
   const router = useRouter();
   const supabase = createClientComponentClient();
+  const [user, setUser] = useState<User | null>(null);
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function checkAuthAndFetchUsers() {
-      try {
-        // Check if user is authenticated
-        const { data: { session }, error: authError } = await supabase.auth.getSession();
-        if (authError) throw authError;
-        
-        console.log('Session:', session);
-        
-        if (!session) {
-          router.push('/login');
-          return;
-        }
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+      setLoading(false);
+    };
 
-        // Check if user is admin
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('is_admin')
-          .eq('id', session.user.id)
-          .single();
+    const fetchUsers = async () => {
+      const { data: users, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-        console.log('Profile:', profile);
-        
-        if (profileError) throw profileError;
-        if (!profile?.is_admin) {
-          console.log('User is not admin');
-          router.push('/');
-          return;
-        }
-
-        // Fetch all users from profiles table
-        const { data: users, error: usersError } = await supabase
-          .from('profiles')
-          .select('id, email, is_admin')
-          .order('email');
-
-        console.log('Users:', users);
-        
-        if (usersError) throw usersError;
-        setUsers(users || []);
-      } catch (error) {
-        console.error('Error:', error);
-        setError('Failed to load users. Please try again later.');
-      } finally {
-        setLoading(false);
+      if (error) {
+        console.error('Error fetching users:', error);
+        return;
       }
-    }
 
-    checkAuthAndFetchUsers();
-  }, [supabase, router]);
+      setUsers(users || []);
+    };
+
+    getUser();
+    fetchUsers();
+  }, [supabase]);
+
+  const handleSignOut = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      router.push('/login');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Loading...</h1>
+          <p className="text-gray-600">Please wait while we load the admin dashboard.</p>
+        </div>
       </div>
     );
   }
 
-  if (error) {
-    return (
-      <div className="container mx-auto py-8">
-        <div className="text-red-500">{error}</div>
-      </div>
-    );
+  if (!user) {
+    return null; // Middleware will redirect to login
   }
 
   return (
-    <div className="container mx-auto py-8">
-      <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
-      <UserList users={users} />
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div className="px-4 py-6 sm:px-0">
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-semibold text-gray-800">Admin Dashboard</h2>
+              <button
+                onClick={handleSignOut}
+                className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                Sign Out
+              </button>
+            </div>
+
+            <div className="mb-8">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">User Management</h3>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created At</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Sign In</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {users.map((user) => (
+                      <tr key={user.id}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.email}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {new Date(user.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {user.last_sign_in ? new Date(user.last_sign_in).toLocaleDateString() : 'Never'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            user.is_admin 
+                              ? 'bg-indigo-100 text-indigo-800' 
+                              : 'bg-green-100 text-green-800'
+                          }`}>
+                            {user.is_admin ? 'Admin' : 'User'}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">System Statistics</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-indigo-50 p-6 rounded-lg">
+                  <h4 className="text-lg font-medium text-indigo-800">Total Users</h4>
+                  <p className="text-3xl font-bold text-indigo-600">{users.length}</p>
+                </div>
+                <div className="bg-green-50 p-6 rounded-lg">
+                  <h4 className="text-lg font-medium text-green-800">Admin Users</h4>
+                  <p className="text-3xl font-bold text-green-600">
+                    {users.filter(u => u.is_admin).length}
+                  </p>
+                </div>
+                <div className="bg-purple-50 p-6 rounded-lg">
+                  <h4 className="text-lg font-medium text-purple-800">Regular Users</h4>
+                  <p className="text-3xl font-bold text-purple-600">
+                    {users.filter(u => !u.is_admin).length}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 } 
