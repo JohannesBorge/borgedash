@@ -2,6 +2,7 @@
 // In a production environment, this should be stored in a database
 export const EMAIL_WHITELIST = [
   'johborge@gmail.com',
+  'johannbor@hotmail.com',
   // Add more emails as needed
 ]
 
