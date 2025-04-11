@@ -1,12 +1,7 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-
-interface User {
-  id: string;
-  email: string;
-}
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { User } from '@/types';
 
 interface AuthContextType {
   user: User | null;
@@ -17,12 +12,12 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
 
   useEffect(() => {
+    // Check if user is logged in
     const checkAuth = async () => {
       try {
         const response = await fetch('/api/auth/me', {
@@ -43,40 +38,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
-    try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-        credentials: 'include',
-      });
+    const response = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password }),
+      credentials: 'include',
+    });
 
-      if (!response.ok) {
-        throw new Error('Login failed');
-      }
-
-      const userData = await response.json();
-      setUser(userData);
-      router.push('/');
-    } catch (error) {
-      console.error('Login error:', error);
-      throw error;
+    if (!response.ok) {
+      throw new Error('Login failed');
     }
+
+    const userData = await response.json();
+    setUser(userData);
   };
 
   const logout = async () => {
-    try {
-      await fetch('/api/auth/logout', {
-        method: 'POST',
-        credentials: 'include',
-      });
-      setUser(null);
-      router.push('/login');
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
+    await fetch('/api/auth/logout', {
+      method: 'POST',
+      credentials: 'include',
+    });
+    setUser(null);
   };
 
   return (

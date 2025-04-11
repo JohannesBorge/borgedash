@@ -1,4 +1,4 @@
-import { User, Board, Task } from '@/types';
+import { User } from '@/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
 
@@ -17,7 +17,7 @@ export async function getUsers(): Promise<User[]> {
   return response.json();
 }
 
-export async function getUserBoards(userId: string): Promise<Board[]> {
+export async function getUserBoards(userId: string): Promise<User['boards']> {
   const response = await fetch(`${API_URL}/users/${userId}/boards`, {
     headers: {
       'Content-Type': 'application/json',
@@ -27,21 +27,6 @@ export async function getUserBoards(userId: string): Promise<Board[]> {
 
   if (!response.ok) {
     throw new Error('Failed to fetch user boards');
-  }
-
-  return response.json();
-}
-
-export async function getBoardTasks(boardId: string): Promise<Task[]> {
-  const response = await fetch(`${API_URL}/boards/${boardId}/tasks`, {
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    credentials: 'include',
-  });
-
-  if (!response.ok) {
-    throw new Error('Failed to fetch board tasks');
   }
 
   return response.json();
