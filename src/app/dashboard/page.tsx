@@ -7,7 +7,6 @@ import TaskBoard from '@/components/TaskBoard'
 import { User } from '@supabase/supabase-js'
 import { isAdminEmail } from '@/lib/whitelist'
 import Link from 'next/link'
-import { Task } from '@/types'
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -42,16 +41,6 @@ export default function DashboardPage() {
     getUser()
   }, [supabase])
 
-  const handleSignOut = async () => {
-    try {
-      const { error } = await supabase.auth.signOut()
-      if (error) throw error
-      router.push('/login')
-    } catch (error) {
-      console.error('Error signing out:', error)
-    }
-  }
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -69,11 +58,8 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">Task Board</h1>
-          </div>
           {isAdmin ? (
             <div className="bg-white rounded-lg shadow p-6">
               <div className="flex justify-between items-center mb-6">
@@ -121,7 +107,7 @@ export default function DashboardPage() {
             </div>
           )}
         </div>
-      </div>
+      </main>
     </div>
   )
 } 
