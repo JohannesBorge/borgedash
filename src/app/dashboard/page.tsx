@@ -6,12 +6,14 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import TaskBoard from '@/components/TaskBoard'
 import { User } from '@supabase/supabase-js'
 import { isAdminEmail } from '@/lib/whitelist'
+import Link from 'next/link'
 
 export default function DashboardPage() {
   const router = useRouter()
   const supabase = createClientComponentClient()
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
     const getUser = async () => {
@@ -19,8 +21,10 @@ export default function DashboardPage() {
       setUser(user)
 
       if (user) {
-        // Check if user is an admin
-        if (isAdminEmail(user.email!)) {
+        const isUserAdmin = isAdminEmail(user.email!)
+        setIsAdmin(isUserAdmin)
+        
+        if (isUserAdmin) {
           // Automatically grant admin access for admin emails
           await supabase
             .from('admin_access')
@@ -64,38 +68,50 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <h1 className="text-xl font-semibold">Dashboard</h1>
-              {isAdminEmail(user.email!) && (
-                <span className="ml-2 px-2 py-1 text-xs font-semibold bg-indigo-100 text-indigo-800 rounded-full">
-                  Admin
-                </span>
-              )}
-            </div>
-            <div className="flex items-center">
-              <div className="flex items-center space-x-4">
-                <span className="text-gray-700">{user.email}</span>
-                <button
-                  onClick={handleSignOut}
-                  className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                >
-                  Sign Out
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </nav>
-
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Your Tasks</h2>
-            <TaskBoard />
-          </div>
+          {isAdmin ? (
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">Admin Dashboard</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="bg-indigo-50 p-6 rounded-lg">
+                  <h3 className="text-lg font-medium text-indigo-800 mb-2">Admin Tools</h3>
+                  <p className="text-gray-600 mb-4">Access administrative features and manage the system.</p>
+                  <Link 
+                    href="/admin" 
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+                  >
+                    Go to Admin Panel
+                  </Link>
+                </div>
+                <div className="bg-green-50 p-6 rounded-lg">
+                  <h3 className="text-lg font-medium text-green-800 mb-2">User Management</h3>
+                  <p className="text-gray-600 mb-4">View and manage user accounts and permissions.</p>
+                  <Link 
+                    href="/admin/users" 
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
+                  >
+                    Manage Users
+                  </Link>
+                </div>
+                <div className="bg-purple-50 p-6 rounded-lg">
+                  <h3 className="text-lg font-medium text-purple-800 mb-2">System Overview</h3>
+                  <p className="text-gray-600 mb-4">View system statistics and performance metrics.</p>
+                  <Link 
+                    href="/admin/stats" 
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700"
+                  >
+                    View Statistics
+                  </Link>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">Your Tasks</h2>
+              <TaskBoard />
+            </div>
+          )}
         </div>
       </main>
     </div>
