@@ -1,54 +1,27 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
 import { NextResponse, type NextRequest } from 'next/server'
 
-export async function middleware(request: NextRequest) {
-  const response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
-  })
+export async function middleware(req: NextRequest) {
+  const res = NextResponse.next()
+  const supabase = createMiddlewareClient({ req, res })
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value
-        },
-        set(name: string, value: string, options: CookieOptions) {
-          response.cookies.set({
-            name,
-            value,
-            ...options,
-          })
-        },
-        remove(name: string, options: CookieOptions) {
-          response.cookies.set({
-            name,
-            value: '',
-            ...options,
-          })
-        },
-      },
-    }
-  )
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
 
-  const { data: { session } } = await supabase.auth.getSession()
-
-  // If the user is not signed in and the current path is not /login,
-  // redirect the user to /login
-  if (!session && request.nextUrl.pathname !== '/login') {
-    return NextResponse.redirect(new URL('/login', request.url))
-  }
-
-  // If the user is signed in and the current path is /login,
+  // If user is not signed in and the current path is not / or /auth
   // redirect the user to /
-  if (session && request.nextUrl.pathname === '/login') {
-    return NextResponse.redirect(new URL('/', request.url))
+  if (!session && !['/', '/auth'].includes(req.nextUrl.pathname)) {
+    return NextResponse.redirect(new URL('/', req.url))
   }
 
-  return response
+  // If user is signed in and the current path is / or /auth
+  // redirect the user to /dashboard
+  if (session && ['/', '/auth'].includes(req.nextUrl.pathname)) {
+    return NextResponse.redirect(new URL('/dashboard', req.url))
+  }
+
+  return res
 }
 
 export const config = {
