@@ -32,10 +32,17 @@ export default function AdminDashboard() {
           return;
         }
 
-        // Temporarily bypass admin check for testing
-        const isAdmin = true; // TODO: Remove this line after testing
+        // Check if user is admin
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('is_admin')
+          .eq('id', session.user.id)
+          .single();
+
+        console.log('Profile:', profile);
         
-        if (!isAdmin) {
+        if (profileError) throw profileError;
+        if (!profile?.is_admin) {
           console.log('User is not admin');
           router.push('/');
           return;
