@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { UserWithBoards } from '@/types';
 import { useRouter } from 'next/navigation';
 import BoardPreview from './BoardPreview';

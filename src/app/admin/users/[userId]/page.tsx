@@ -3,9 +3,12 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { Board, Task } from '@/types';
-import { getUserBoards, getBoardTasks } from '@/lib/api';
+import { Board } from '@/types';
+import { getUserBoards } from '@/lib/api';
 import BoardPreview from '@/components/admin/BoardPreview';
+import { BoardWithTasks, UserWithBoards } from '@/types';
+import { getBoard } from '@/lib/api';
+import { createClient } from '@/lib/supabase/client';
 
 interface UserBoardPageProps {
   params: {

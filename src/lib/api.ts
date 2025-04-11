@@ -1,8 +1,9 @@
-import { User, Board, Task } from '@/types';
+import { BoardWithTasks, Task, UserWithBoards } from '@/types';
+import { createClient } from './supabase/client';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
 
-export async function getUsers(): Promise<User[]> {
+export async function getUsers(): Promise<UserWithBoards[]> {
   const response = await fetch(`${API_URL}/users`, {
     headers: {
       'Content-Type': 'application/json',
@@ -17,7 +18,7 @@ export async function getUsers(): Promise<User[]> {
   return response.json();
 }
 
-export async function getUserBoards(userId: string): Promise<User['boards']> {
+export async function getUserBoards(userId: string): Promise<UserWithBoards['boards']> {
   const response = await fetch(`${API_URL}/users/${userId}/boards`, {
     headers: {
       'Content-Type': 'application/json',
