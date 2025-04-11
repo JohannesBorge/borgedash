@@ -6,6 +6,7 @@ import { User } from '@supabase/supabase-js'
 import GrantAdminAccess from '@/components/GrantAdminAccess'
 import { isAdminEmail } from '@/lib/whitelist'
 import { useRouter } from 'next/navigation'
+import TaskBoard from '@/components/TaskBoard'
 
 type AdminAccess = {
   granted: boolean
@@ -116,11 +117,11 @@ export default function HomePage() {
               <GrantAdminAccess />
             </div>
           ) : (
-            <div className="border-4 border-dashed border-gray-200 rounded-lg h-96 flex items-center justify-center">
-              <p className="text-gray-500 text-lg">
-                Welcome to your dashboard! You are authenticated as {user.email}
-                {isAdminEmail(user.email!) && " (Admin)"}
-              </p>
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-gray-900">Task Board</h2>
+              </div>
+              <TaskBoard userId={user.id} />
             </div>
           )}
         </div>
