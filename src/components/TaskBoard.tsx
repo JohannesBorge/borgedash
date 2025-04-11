@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, Suspense } from 'react'
 import { Task, TaskStatus } from '@/types/task'
 import dynamic from 'next/dynamic'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/client'
 
 const TaskColumn = dynamic(() => import('./TaskColumn'), {
   ssr: false,
@@ -17,6 +17,7 @@ interface TaskBoardProps {
 export default function TaskBoard({ userId }: TaskBoardProps) {
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
+  const supabase = createClient()
 
   const fetchTasks = useCallback(async () => {
     try {
@@ -33,7 +34,7 @@ export default function TaskBoard({ userId }: TaskBoardProps) {
     } finally {
       setLoading(false)
     }
-  }, [userId])
+  }, [userId, supabase])
 
   useEffect(() => {
     fetchTasks()
@@ -75,7 +76,7 @@ export default function TaskBoard({ userId }: TaskBoardProps) {
           <TaskColumn
             title={column.title}
             tasks={tasks.filter((t) => t.status === column.id)}
-            onDrop={(taskId) => handleDrop(taskId, column.id)}
+            onDrop={(taskId: string) => handleDrop(taskId, column.id)}
           />
         </Suspense>
       ))}

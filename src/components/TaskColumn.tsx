@@ -5,6 +5,10 @@ import { useDrop } from 'react-dnd/dist/index.js'
 import { Task } from '@/types/task'
 import dynamic from 'next/dynamic'
 
+interface TaskCardProps {
+  task: Task
+}
+
 const TaskCard = dynamic(() => import('./TaskCard'), {
   ssr: false,
   loading: () => <div>Loading card...</div>
