@@ -1,56 +1,40 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { Board } from '@/types';
 import { getUserBoards } from '@/lib/api';
-import BoardPreview from '@/components/admin/BoardPreview';
-import { BoardWithTasks, UserWithBoards } from '@/types';
-import { getBoard } from '@/lib/api';
-import { createClient } from '@/lib/supabase/client';
+import { Board } from '@/types';
+import TaskColumn from '@/components/TaskColumn';
 
-interface UserBoardPageProps {
-  params: {
-    userId: string;
-  };
-}
-
-export default function UserBoardPage({ params }: UserBoardPageProps) {
-  const { user, loading } = useAuth();
-  const router = useRouter();
+export default function UserBoardPage() {
   const [boards, setBoards] = useState<Board[]>([]);
-  const [loadingBoards, setLoadingBoards] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const router = useRouter();
+  const { userId } = useParams();
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login');
-    } else if (!loading && user && user.role !== 'admin') {
+    if (!user?.isAdmin) {
       router.push('/');
+      return;
     }
-  }, [user, loading, router]);
 
-  useEffect(() => {
     const fetchBoards = async () => {
       try {
-        const fetchedBoards = await getUserBoards(params.userId);
-        setBoards(fetchedBoards);
-        setError(null);
+        const userBoards = await getUserBoards(userId as string);
+        setBoards(userBoards);
       } catch (error) {
-        console.error('Error fetching boards:', error);
-        setError('Failed to load boards. Please try again later.');
+        console.error('Error fetching user boards:', error);
       } finally {
-        setLoadingBoards(false);
+        setLoading(false);
       }
     };
 
-    if (user?.role === 'admin') {
-      fetchBoards();
-    }
-  }, [user, params.userId]);
+    fetchBoards();
+  }, [user, router, userId]);
 
-  if (loading || loadingBoards) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -58,26 +42,32 @@ export default function UserBoardPage({ params }: UserBoardPageProps) {
     );
   }
 
-  if (!user || user.role !== 'admin') {
-    return null;
-  }
-
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">User Boards</h1>
-          {error && (
-            <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
-              {error}
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-8">User Boards</h1>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {boards.map((board) => (
+          <div key={board.id} className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-xl font-semibold mb-4">{board.name}</h2>
+            <div className="grid grid-cols-3 gap-4">
+              <TaskColumn
+                title="Must Get Done"
+                tasks={board.tasks.filter((task) => task.status === 'must_get_done')}
+                status="must_get_done"
+              />
+              <TaskColumn
+                title="Doing Now"
+                tasks={board.tasks.filter((task) => task.status === 'doing_now')}
+                status="doing_now"
+              />
+              <TaskColumn
+                title="Finished"
+                tasks={board.tasks.filter((task) => task.status === 'finished')}
+                status="finished"
+              />
             </div>
-          )}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {boards.map((board) => (
-              <BoardPreview key={board.id} board={board} />
-            ))}
           </div>
-        </div>
+        ))}
       </div>
     </div>
   );
