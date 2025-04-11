@@ -3,18 +3,13 @@
 import { useRef, Suspense } from 'react'
 import { useDrop } from 'react-dnd/dist/index.js'
 import { Task } from '@/types/task'
+import { TaskColumnProps } from '@/types/components'
 import dynamic from 'next/dynamic'
 
 const TaskCard = dynamic<{ task: Task }>(() => import('./TaskCard'), {
   ssr: false,
   loading: () => <div>Loading card...</div>
 })
-
-interface TaskColumnProps {
-  title: string
-  tasks: Task[]
-  onDrop: (taskId: string) => void
-}
 
 export default function TaskColumn({ title, tasks, onDrop }: TaskColumnProps) {
   const ref = useRef<HTMLDivElement>(null)

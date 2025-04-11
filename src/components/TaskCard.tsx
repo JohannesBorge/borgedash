@@ -2,11 +2,7 @@
 
 import { useRef } from 'react'
 import { useDrag } from 'react-dnd/dist/index.js'
-import { Task } from '@/types/task'
-
-interface TaskCardProps {
-  task: Task
-}
+import { TaskCardProps } from '@/types/components'
 
 export default function TaskCard({ task }: TaskCardProps) {
   const ref = useRef<HTMLDivElement>(null)

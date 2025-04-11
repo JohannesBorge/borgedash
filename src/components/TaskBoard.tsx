@@ -2,21 +2,14 @@
 
 import { useState, useEffect, useCallback, Suspense } from 'react'
 import { Task, TaskStatus } from '@/types/task'
+import { TaskBoardProps, TaskColumnProps } from '@/types/components'
 import dynamic from 'next/dynamic'
 import { createClient } from '@/lib/supabase/client'
 
-const TaskColumn = dynamic<{
-  title: string
-  tasks: Task[]
-  onDrop: (taskId: string) => void
-}>(() => import('./TaskColumn'), {
+const TaskColumn = dynamic<TaskColumnProps>(() => import('./TaskColumn'), {
   ssr: false,
   loading: () => <div>Loading column...</div>
 })
-
-interface TaskBoardProps {
-  userId: string
-}
 
 export default function TaskBoard({ userId }: TaskBoardProps) {
   const [tasks, setTasks] = useState<Task[]>([])
