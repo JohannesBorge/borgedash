@@ -70,6 +70,20 @@ export default function UserBoard() {
     checkAuthAndFetchData();
   }, [params.userId, supabase, router]);
 
+  const handleDeleteTask = async (taskId: string) => {
+    const { error } = await supabase
+      .from('tasks')
+      .delete()
+      .eq('id', taskId);
+
+    if (error) {
+      console.error('Error deleting task:', error);
+      return;
+    }
+
+    setTasks(tasks.filter(task => task.id !== taskId));
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -110,9 +124,9 @@ export default function UserBoard() {
         </button>
       </div>
       <div className="grid grid-cols-3 gap-6">
-        <TaskColumn title="To Do" tasks={todoTasks} status="must_get_done" />
-        <TaskColumn title="In Progress" tasks={inProgressTasks} status="doing_now" />
-        <TaskColumn title="Done" tasks={doneTasks} status="finished" />
+        <TaskColumn title="To Do" tasks={todoTasks} status="must_get_done" onDeleteTask={handleDeleteTask} />
+        <TaskColumn title="In Progress" tasks={inProgressTasks} status="doing_now" onDeleteTask={handleDeleteTask} />
+        <TaskColumn title="Done" tasks={doneTasks} status="finished" onDeleteTask={handleDeleteTask} />
       </div>
     </div>
   );
