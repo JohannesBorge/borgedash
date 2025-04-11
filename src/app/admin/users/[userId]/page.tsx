@@ -11,7 +11,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 
 const ADMIN_EMAILS = ['johborge@gmail.com'];
 
-export default function UserBoardView({
+export default async function UserBoardView({
   params,
 }: {
   params: { userId: string };
