@@ -1,4 +1,4 @@
-import { Task, TaskStatus } from './task'
+import { Task } from './task'
 
 export interface TaskCardProps {
   task: Task
