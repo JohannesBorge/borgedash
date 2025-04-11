@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useDrop } from 'react-dnd/dist/index.js'
 import { Task, TaskStatus } from '@/types/task'
 import TaskColumn from './TaskColumn'
 import { supabase } from '@/lib/supabase'
