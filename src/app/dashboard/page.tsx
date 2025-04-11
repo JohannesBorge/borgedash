@@ -7,107 +7,123 @@ import TaskBoard from '@/components/TaskBoard'
 import { User } from '@supabase/supabase-js'
 import { isAdminEmail } from '@/lib/whitelist'
 import Link from 'next/link'
+import { ClickUpAPI } from '@/lib/clickup'
+import { ClickUpTeam, ClickUpMember, ClickUpTask } from '@/types/clickup'
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
 
-export default function DashboardPage() {
-  const router = useRouter()
-  const supabase = createClientComponentClient()
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [isAdmin, setIsAdmin] = useState(false)
+export default async function DashboardPage() {
+  const cookieStore = await cookies()
+  const token = cookieStore.get('clickup_token')
 
-  useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      setUser(user)
-
-      if (user) {
-        const isUserAdmin = isAdminEmail(user.email!)
-        setIsAdmin(isUserAdmin)
-        
-        if (isUserAdmin) {
-          // Automatically grant admin access for admin emails
-          await supabase
-            .from('admin_access')
-            .upsert({ 
-              id: user.id,
-              granted: true,
-              granted_at: new Date().toISOString()
-            })
-        }
-      }
-      setLoading(false)
-    }
-
-    getUser()
-  }, [supabase])
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Loading...</h1>
-          <p className="text-gray-600">Please wait while we check your authentication status.</p>
-        </div>
-      </div>
-    )
+  if (!token) {
+    redirect('/')
   }
 
-  if (!user) {
-    return null // Middleware will redirect to login
-  }
+  const clickup = ClickUpAPI.getInstance()
+  const teams = await clickup.getTeams()
+  const team = teams.teams[0] // Get the first team for now
+  const members = await clickup.getTeamMembers(team.id)
+  const tasks = await clickup.getTasks(team.id)
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
-          {isAdmin ? (
-            <div className="bg-white rounded-lg shadow p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-semibold text-gray-800">Admin Dashboard</h2>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div className="bg-indigo-50 p-6 rounded-lg">
-                  <h3 className="text-lg font-medium text-indigo-800 mb-2">Admin Tools</h3>
-                  <p className="text-gray-600 mb-4">Access administrative features and manage the system.</p>
-                  <Link 
-                    href="/admin" 
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+          <div className="bg-white rounded-lg shadow p-6">
+            <h1 className="text-2xl font-bold text-gray-900 mb-6">
+              {team.name} Dashboard
+            </h1>
+            
+            {/* Team Members Section */}
+            <div className="mb-8">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                Team Members
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {members.members.map((member: ClickUpMember) => (
+                  <div
+                    key={member.user.id}
+                    className="bg-gray-50 p-4 rounded-lg"
                   >
-                    Go to Admin Panel
-                  </Link>
-                </div>
-                <div className="bg-green-50 p-6 rounded-lg">
-                  <h3 className="text-lg font-medium text-green-800 mb-2">User Management</h3>
-                  <p className="text-gray-600 mb-4">View and manage user accounts and permissions.</p>
-                  <Link 
-                    href="/admin/users" 
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
-                  >
-                    Manage Users
-                  </Link>
-                </div>
-                <div className="bg-purple-50 p-6 rounded-lg">
-                  <h3 className="text-lg font-medium text-purple-800 mb-2">System Overview</h3>
-                  <p className="text-gray-600 mb-4">View system statistics and performance metrics.</p>
-                  <Link 
-                    href="/admin/stats" 
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700"
-                  >
-                    View Statistics
-                  </Link>
-                </div>
+                    <div className="flex items-center gap-3">
+                      {member.user.profilePicture ? (
+                        <img
+                          src={member.user.profilePicture}
+                          alt={member.user.username}
+                          className="w-10 h-10 rounded-full"
+                        />
+                      ) : (
+                        <div
+                          className="w-10 h-10 rounded-full flex items-center justify-center"
+                          style={{ backgroundColor: member.user.color }}
+                        >
+                          <span className="text-white font-medium">
+                            {member.user.username[0].toUpperCase()}
+                          </span>
+                        </div>
+                      )}
+                      <div>
+                        <h3 className="font-medium text-gray-900">
+                          {member.user.username}
+                        </h3>
+                        <p className="text-sm text-gray-500">
+                          {member.user.email}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-          ) : (
-            <div className="bg-white rounded-lg shadow p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-semibold text-gray-800">Your Tasks</h2>
+
+            {/* Tasks Section */}
+            <div>
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                Recent Tasks
+              </h2>
+              <div className="space-y-4">
+                {tasks.tasks.map((task: ClickUpTask) => (
+                  <div
+                    key={task.id}
+                    className="bg-gray-50 p-4 rounded-lg"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-medium text-gray-900">
+                          {task.name}
+                        </h3>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span
+                            className="inline-block w-3 h-3 rounded-full"
+                            style={{ backgroundColor: task.status.color }}
+                          />
+                          <span className="text-sm text-gray-500">
+                            {task.status.status}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex -space-x-2">
+                        {task.assignees.map((assignee) => (
+                          <div
+                            key={assignee.user.id}
+                            className="w-8 h-8 rounded-full border-2 border-white flex items-center justify-center"
+                            style={{ backgroundColor: assignee.user.color }}
+                          >
+                            <span className="text-white text-xs font-medium">
+                              {assignee.user.username[0].toUpperCase()}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
-              <TaskBoard />
             </div>
-          )}
+          </div>
         </div>
-      </main>
+      </div>
     </div>
   )
 } 
