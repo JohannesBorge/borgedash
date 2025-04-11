@@ -2,6 +2,9 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User } from '@/types';
+import { createClient } from '@/lib/supabase/client';
+
+const supabase = createClient();
 
 interface AuthContextType {
   user: User | null;
@@ -20,11 +23,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Check if user is logged in
     const checkAuth = async () => {
       try {
-        const response = await fetch('/api/auth/me', {
-          credentials: 'include',
-        });
-        if (response.ok) {
-          const userData = await response.json();
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) throw error;
+        
+        if (session?.user) {
+          const { data: userData, error: userError } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+            
+          if (userError) throw userError;
           setUser(userData);
         }
       } catch (error) {
@@ -35,32 +44,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     checkAuth();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        const { data: userData, error } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+          
+        if (error) {
+          console.error('Error fetching user data:', error);
+          return;
+        }
+        
+        setUser(userData);
+      } else {
+        setUser(null);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
-    const response = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email, password }),
-      credentials: 'include',
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
     });
 
-    if (!response.ok) {
+    if (error) {
       throw new Error('Login failed');
     }
-
-    const userData = await response.json();
-    setUser(userData);
   };
 
   const logout = async () => {
-    await fetch('/api/auth/logout', {
-      method: 'POST',
-      credentials: 'include',
-    });
-    setUser(null);
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      throw new Error('Logout failed');
+    }
   };
 
   return (
