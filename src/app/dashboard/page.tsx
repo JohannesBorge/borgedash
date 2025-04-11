@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import TaskBoard from '@/components/TaskBoard'
 import { User } from '@supabase/supabase-js'
@@ -9,7 +8,6 @@ import { isAdminEmail } from '@/lib/whitelist'
 import Link from 'next/link'
 
 export default function DashboardPage() {
-  const router = useRouter()
   const supabase = createClientComponentClient()
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
@@ -40,16 +38,6 @@ export default function DashboardPage() {
 
     getUser()
   }, [supabase])
-
-  const handleSignOut = async () => {
-    try {
-      const { error } = await supabase.auth.signOut()
-      if (error) throw error
-      router.push('/login')
-    } catch (error) {
-      console.error('Error signing out:', error)
-    }
-  }
 
   if (loading) {
     return (
