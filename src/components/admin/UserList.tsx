@@ -1,15 +1,20 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { User } from '@supabase/supabase-js';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
+interface Profile {
+  id: string;
+  email: string;
+  is_admin: boolean;
+}
+
 interface UserListProps {
-  users: User[];
+  users: Profile[];
 }
 
 interface UserTaskCounts {

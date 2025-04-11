@@ -6,8 +6,14 @@ import { User } from '@supabase/supabase-js';
 import UserList from '@/components/admin/UserList';
 import { useRouter } from 'next/navigation';
 
+interface Profile {
+  id: string;
+  email: string;
+  is_admin: boolean;
+}
+
 export default function AdminDashboard() {
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -38,8 +44,12 @@ export default function AdminDashboard() {
           return;
         }
 
-        // Fetch users
-        const { data: { users }, error: usersError } = await supabase.auth.admin.listUsers();
+        // Fetch all users from profiles table
+        const { data: users, error: usersError } = await supabase
+          .from('profiles')
+          .select('id, email, is_admin')
+          .order('email');
+
         if (usersError) throw usersError;
         setUsers(users || []);
       } catch (error) {
