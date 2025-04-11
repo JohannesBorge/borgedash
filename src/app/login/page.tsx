@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { isEmailWhitelisted } from '@/lib/whitelist'
 import { useRouter } from 'next/navigation'
 
@@ -12,8 +12,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [isRegistering, setIsRegistering] = useState(false)
   const router = useRouter()
-
-  const supabase = createClient()
+  const supabase = createClientComponentClient()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -21,33 +20,28 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      console.log('Attempting to:', isRegistering ? 'register' : 'login')
-      console.log('Email:', email)
-      
       if (isRegistering) {
-        // Check if email is whitelisted
         if (!isEmailWhitelisted(email)) {
           throw new Error('This email is not authorized to register. Please contact support.')
         }
 
-        const { data, error } = await supabase.auth.signUp({
+        const { error } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
+          },
         })
 
-        console.log('Sign up response:', { data, error })
         if (error) throw error
         setError('Registration successful! Please check your email to confirm your account.')
       } else {
-        const { data, error } = await supabase.auth.signInWithPassword({
+        const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
         })
 
-        console.log('Sign in response:', { data, error })
         if (error) throw error
-        
-        // Redirect to dashboard after successful login
         router.replace('/dashboard')
       }
     } catch (error) {
